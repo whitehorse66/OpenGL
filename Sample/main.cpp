@@ -14,10 +14,11 @@
 GLboolean printShaderInfoLog(GLuint shader, const char* str) {
 	//コンパイル結果を取得する
 	GLint status;
+	//シェーダオブジェクトの情報を取り出す
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 	if (status == GL_FALSE)std::cerr << "Compile Error in " << str << std::endl;
 
-	//シェーダーコンパイル時のログの長さを首都高する
+	//シェーダーコンパイル時のログの長さを取得する
 	GLsizei bufSize;
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &bufSize);
 
@@ -64,12 +65,16 @@ GLuint createProgram(const char* vsrc, const char* fsrc) {
 	if (vsrc != NULL) {
 		//バーテックスシェーダーのシェーダーオブジェクトを作成する
 		const GLuint vobj(glCreateShader(GL_VERTEX_SHADER));
+		//シェーダオブジェクトに対してソースプログラムを読み込む
 		glShaderSource(vobj, 1, &vsrc, NULL);
+		//シェーダオブジェクトに読み込まれたソースファイルをコンパイルする
 		glCompileShader(vobj);
 
-		//バーテックスシェーダーのシェーダーオブジェクトをプログラムオブジェクトに組み込む
+		//成功していればバーテックスシェーダーのシェーダーオブジェクトをプログラムオブジェクトに組み込む
 		if (printShaderInfoLog(vobj, "vertex shader"))
+			//プログラムオブジェクトにシェーダオブジェクトを組み込む
 			glAttachShader(program, vobj);
+		//削除マークをつける
 		glDeleteShader(vobj);
 	}
 
@@ -79,18 +84,20 @@ GLuint createProgram(const char* vsrc, const char* fsrc) {
 		glShaderSource(fobj, 1, &fsrc, NULL);
 		glCompileShader(fobj);
 
-		//フラグメントシェーダーのシェーダーオブジェクトをプログラムオブジェクトに組み込む
+		//成功していればフラグメントシェーダーのシェーダーオブジェクトをプログラムオブジェクトに組み込む
 		if(printShaderInfoLog(fobj,"fragment shader"))
 			glAttachShader(program, fobj);
 		glDeleteShader(fobj);
 	}
 
 	//プログラムオブジェクトをリンクする
+	//Attribute変数の場所を指定している(in変数とout変数)
 	glBindAttribLocation(program, 0, "position");
 	glBindFragDataLocation(program,0,"fragment");
+	//programに指定したプログラムオブジェクトをリンクしている
 	glLinkProgram(program);
 
-	//作成したプログラムオブジェクトを返す
+	//成功していれば作成したプログラムオブジェクトを返す
 	if(printProgramInfoLog(program))
 		return program;
 
@@ -122,7 +129,7 @@ bool readShaderSource(const char* name, std::vector<GLchar>& buffer) {
 	//ファイルサイズのメモリを確保
 	buffer.resize(length + 1);
 
-	//ファイルを先頭から読み込む
+	//ファイルを先頭から末尾まで読み込む
 	file.seekg(0L,std::ios::beg);
 	file.read(buffer.data(), length);
 	buffer[length] = '\0';
@@ -144,12 +151,14 @@ bool readShaderSource(const char* name, std::vector<GLchar>& buffer) {
 //frag:フラグメントシェーダーのソースファイル名
 GLuint loadProgram(const char* vert, const char* frag) {
 	//シェーダーのソースファイルを読み込む
+	//上手く読み込まれていたらvstatとfstatはtrueになる
 	std::vector<GLchar> vsrc;
 	const bool vstat(readShaderSource(vert, vsrc));
 	std::vector<GLchar>fsrc;
 	const bool fstat(readShaderSource(frag, fsrc));
 	
 	//プログラムオブジェクトを作成する
+	//先頭へのポインタで渡す
 	return vstat && fstat ? createProgram(vsrc.data(), fsrc.data()) : 0;
 }
 
@@ -170,13 +179,16 @@ int main() {
 		return 1;
 	}
 
-	//プログラム終了時の処理を登録する
+	//atexit：プログラム終了時の処理を登録する
+	//glfwTerminate：GLFWで作成した全てのウィンドウを閉じ確保したリソースの全てを開放する
 	atexit(glfwTerminate);
 
 	//OpenGL Version 3.2 Core Profileを選択する
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+	//古い機能を削除したりするプロファイルを使う
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	//OpenGL3.0以前の機能を含まない
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 
@@ -190,7 +202,6 @@ int main() {
 	glViewport(100, 50, 300, 300);
 
 	//プログラムオブジェクトを作成するcreate
-	
 	const GLuint program(loadProgram("point.vert", "point.frag"));
 
 	//図形データを作成する
