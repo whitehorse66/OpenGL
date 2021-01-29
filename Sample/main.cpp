@@ -165,9 +165,9 @@ GLuint loadProgram(const char* vert, const char* frag) {
 //短形の頂点の位置
 constexpr Object::Vertex rectangleVertex[] = {
 	{-0.5f,-0.5f},
-	{ 1.5f,-0.5f},
-	{ 1.5f, 1.5f},
-	{-0.5f, 1.5f}
+	{ 0.5f,-0.5f},
+	{ 0.5f, 0.5f},
+	{-0.5f, 0.5f}
 };
 
 
@@ -205,7 +205,9 @@ int main() {
 	const GLuint program(loadProgram("point.vert", "point.frag"));
 
 	//uniform変数の場所を取得する
-	const GLint aspectLoc(glGetUniformLocation(program, "aspect"));
+	const GLint sizeLoc(glGetUniformLocation(program, "size"));
+	const GLint scaleLoc(glGetUniformLocation(program, "scale"));
+
 
 	//図形データを作成する
 	std::unique_ptr<const Shape> shape(new Shape(2, 4, rectangleVertex));
@@ -224,7 +226,8 @@ int main() {
 		glUseProgram(program);
 
 		//uniform変数に値を設定する
-		glUniform1f(aspectLoc, window.getAspect());
+		glUniform2fv(sizeLoc, 1, window.getSize());
+		glUniform1f(scaleLoc, window.getScale());
 
 		//図形を描画する
 		shape->draw();

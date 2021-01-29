@@ -14,8 +14,9 @@ class Window {
 	//ワールド座標系に対するデバイス座標系の拡大率
 	GLfloat scale;
 
-	//縦横比
-	GLfloat aspect;
+	//図形の正規化デバイス座標系上での位置
+	GLfloat location[2];
+
 
 
 public:
@@ -24,6 +25,7 @@ public:
 		window(glfwCreateWindow(width, height, title, NULL, NULL)) 
 		,scale(100.0f)
 	{
+
 		if (window == NULL)
 		{
 			//ウィンドウが作成できなかった
@@ -46,11 +48,11 @@ public:
 		//カラーバッファの入れ替えのタイミングを指定する
 		glfwSwapInterval(1);
 
-		//このインスタンスのthisポインタを記録しておく
-		glfwSetWindowUserPointer(window, this);
-
 		//ウィンドウサイズ変更時に呼び出す処理の登録
 		glfwSetWindowSizeCallback(window, resize);
+
+		//このインスタンスのthisポインタを記録しておく
+		glfwSetWindowUserPointer(window, this);
 
 		//開いたウィンドウの初期設定
 		resize(window, width, height);
@@ -89,6 +91,7 @@ public:
 		Window* const
 			instance(static_cast<Window*>(glfwGetWindowUserPointer(window)));
 		if (instance != NULL) {
+			
 			//開いたウィンドウのサイズを保存する
 			instance->size[0] = static_cast<GLfloat>(width);
 			instance->size[1] = static_cast<GLfloat>(height);
