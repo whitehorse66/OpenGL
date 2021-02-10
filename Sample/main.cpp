@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "Window.h"
+#include "Matrix.h"
 #include "Shape.h"
 
 //シェーダーオブジェクトのコンパイル結果を表示する
@@ -198,16 +199,13 @@ int main() {
 	//背景色を指定する
 	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 
-	//ビューポートを設定する
-	glViewport(100, 50, 300, 300);
 
 	//プログラムオブジェクトを作成するcreate
 	const GLuint program(loadProgram("point.vert", "point.frag"));
 
 	//uniform変数の場所を取得する
-	const GLint sizeLoc(glGetUniformLocation(program, "size"));
-	const GLint scaleLoc(glGetUniformLocation(program, "scale"));
-
+	const GLint modelviewLoc(glGetUniformLocation(program, "modelview"));
+	const GLint modelLoc(glGetUniformLocation(program, "model"));
 
 	//図形データを作成する
 	std::unique_ptr<const Shape> shape(new Shape(2, 4, rectangleVertex));
@@ -225,9 +223,26 @@ int main() {
 		//シェーダープログラムの使用開始
 		glUseProgram(program);
 
+		//拡大縮小の変換行列を求める
+		const GLfloat* const size(window.getSize());
+		const GLfloat scale(window.getScale() * 2.0f);
+		const Matrix scaling(Matrix::scale(scale/size[0], scale / size[1], 1.0f));
+
+		//平行移動の変換行列を求める
+		const GLfloat* const position(window.getLocation());
+		const Matrix translation(Matrix::translate(position[0], position[1], 0.0f));
+
+		//モデル変換行列を求める
+		const Matrix model(translation * scaling);
+
+		//ビュー変換行列を求める
+		const Matrix view(Matrix::lookat(0.0f, 0.0f, 0.0f, -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f));
+
+		//モデルビュー変換行列を求める
+		const Matrix modelview(view * model);
+
 		//uniform変数に値を設定する
-		glUniform2fv(sizeLoc, 1, window.getSize());
-		glUniform1f(scaleLoc, window.getScale());
+		glUniformMatrix4fv(modelviewLoc, 1, GL_FALSE, modelview.data());
 
 		//図形を描画する
 		shape->draw();

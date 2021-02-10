@@ -152,6 +152,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Matrix.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="Shape.h" />
     <ClInclude Include="Window.h" />
