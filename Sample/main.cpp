@@ -8,6 +8,9 @@
 #include "Window.h"
 #include "Matrix.h"
 #include "Shape.h"
+#include "ShapeIndex.h"
+#include "SolidShapeIndex.h"
+#include "SolidShape.h"
 
 //シェーダーオブジェクトのコンパイル結果を表示する
 //shader:シェーダーオブジェクト名
@@ -94,6 +97,7 @@ GLuint createProgram(const char* vsrc, const char* fsrc) {
 	//プログラムオブジェクトをリンクする
 	//Attribute変数の場所を指定している(in変数とout変数)
 	glBindAttribLocation(program, 0, "position");
+	glBindAttribLocation(program, 1, "color");
 	glBindFragDataLocation(program,0,"fragment");
 	//programに指定したプログラムオブジェクトをリンクしている
 	glLinkProgram(program);
@@ -171,6 +175,110 @@ constexpr Object::Vertex rectangleVertex[] = {
 	{-0.5f, 0.5f}
 };
 
+constexpr Object::Vertex octahedronVertex[] =
+{
+ { 0.0f, 1.0f, 0.0f },
+ { -1.0f, 0.0f, 0.0f },
+ { 0.0f, -1.0f, 0.0f },
+ { 1.0f, 0.0f, 0.0f },
+ { 0.0f, 1.0f, 0.0f },
+ { 0.0f, 0.0f, 1.0f },
+ { 0.0f, -1.0f, 0.0f },
+ { 0.0f, 0.0f, -1.0f },
+ { -1.0f, 0.0f, 0.0f },
+ { 0.0f, 0.0f, 1.0f },
+ { 1.0f, 0.0f, 0.0f },
+ { 0.0f, 0.0f, -1.0f }
+};
+
+//六面体の頂点の位置と色
+constexpr Object::Vertex cubeVertex[] =
+{
+ { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f },
+ { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.8f },
+ { -1.0f, 1.0f, 1.0f, 0.0f, 0.8f, 0.0f },
+ { -1.0f, 1.0f, -1.0f, 0.0f, 0.8f, 0.8f },
+ { 1.0f, 1.0f, -1.0f, 0.8f, 0.0f, 0.0f },
+ { 1.0f, -1.0f, -1.0f, 0.8f, 0.0f, 0.8f },
+ { 1.0f, -1.0f, 1.0f, 0.8f, 0.8f, 0.0f },
+ { 1.0f, 1.0f, 1.0f, 0.8f, 0.8f, 0.8f }
+};
+
+// 面ごとに色を変えた六面体の頂点属性
+constexpr Object::Vertex solidCubeVertex[] =
+{
+	// 左
+	{ -1.0f, -1.0f, -1.0f, 0.1f, 0.8f, 0.1f },
+	{ -1.0f, -1.0f, 1.0f, 0.1f, 0.8f, 0.1f },
+	{ -1.0f, 1.0f, 1.0f, 0.1f, 0.8f, 0.1f },
+	{ -1.0f, -1.0f, -1.0f, 0.1f, 0.8f, 0.1f },
+	{ -1.0f, 1.0f, 1.0f, 0.1f, 0.8f, 0.1f },
+	{ -1.0f, 1.0f, -1.0f, 0.1f, 0.8f, 0.1f },
+	// 裏
+	{ 1.0f, -1.0f, -1.0f, 0.8f, 0.1f, 0.8f },
+	{ -1.0f, -1.0f, -1.0f, 0.8f, 0.1f, 0.8f },
+	{ -1.0f, 1.0f, -1.0f, 0.8f, 0.1f, 0.8f },
+	{ 1.0f, -1.0f, -1.0f, 0.8f, 0.1f, 0.8f },
+	{ -1.0f, 1.0f, -1.0f, 0.8f, 0.1f, 0.8f },
+	{ 1.0f, 1.0f, -1.0f, 0.8f, 0.1f, 0.8f },
+	// 下
+	{ -1.0f, -1.0f, -1.0f, 0.1f, 0.8f, 0.8f },
+	{ 1.0f, -1.0f, -1.0f, 0.1f, 0.8f, 0.8f },
+	{ 1.0f, -1.0f, 1.0f, 0.1f, 0.8f, 0.8f },
+	{ -1.0f, -1.0f, -1.0f, 0.1f, 0.8f, 0.8f },
+	{ 1.0f, -1.0f, 1.0f, 0.1f, 0.8f, 0.8f },
+	{ -1.0f, -1.0f, 1.0f, 0.1f, 0.8f, 0.8f },
+	// 右
+	{ 1.0f, -1.0f, 1.0f, 0.1f, 0.1f, 0.8f },
+	{ 1.0f, -1.0f, -1.0f, 0.1f, 0.1f, 0.8f },
+	{ 1.0f, 1.0f, -1.0f, 0.1f, 0.1f, 0.8f },
+	{ 1.0f, -1.0f, 1.0f, 0.1f, 0.1f, 0.8f },
+	{ 1.0f, 1.0f, -1.0f, 0.1f, 0.1f, 0.8f },
+	{ 1.0f, 1.0f, 1.0f, 0.1f, 0.1f, 0.8f },
+	// 上
+	{ -1.0f, 1.0f, -1.0f, 0.8f, 0.1f, 0.1f },
+	{ -1.0f, 1.0f, 1.0f, 0.8f, 0.1f, 0.1f },
+	{ 1.0f, 1.0f, 1.0f, 0.8f, 0.1f, 0.1f },
+	{ -1.0f, 1.0f, -1.0f, 0.8f, 0.1f, 0.1f },
+	{ 1.0f, 1.0f, 1.0f, 0.8f, 0.1f, 0.1f },
+	{ 1.0f, 1.0f, -1.0f, 0.8f, 0.1f, 0.1f },
+	// 前
+	{ -1.0f, -1.0f, 1.0f, 0.8f, 0.8f, 0.1f },
+	{ 1.0f, -1.0f, 1.0f, 0.8f, 0.8f, 0.1f },
+	{ 1.0f, 1.0f, 1.0f, 0.8f, 0.8f, 0.1f },
+	{ -1.0f, -1.0f, 1.0f, 0.8f, 0.8f, 0.1f },
+	{ 1.0f, 1.0f, 1.0f, 0.8f, 0.8f, 0.1f },
+	{ -1.0f, 1.0f, 1.0f, 0.8f, 0.8f, 0.1f }
+};
+
+//六面体の稜線の両端点のインデックス
+constexpr GLuint wireCubeIndex[] =
+{
+ 1, 0, 
+ 2, 7, 
+ 3, 0, 
+ 4, 7, 
+ 5, 0, 
+ 6, 7, 
+ 1, 2, 
+ 2, 3, 
+ 3, 4,
+ 4, 5, 
+ 5, 6, 
+ 6, 1 
+};
+
+// 六面体の面を塗りつぶす三角形の頂点のインデックス
+constexpr GLuint solidCubeIndex[] =
+{
+	0, 1, 2, 3, 4, 5, // 左
+	6, 7, 8, 9, 10, 11, // 裏
+	12, 13, 14, 15, 16, 17, // 下
+	18, 19, 20, 21, 22, 23, // 右
+	24, 25, 26, 27, 28, 29, // 上
+	30, 31, 32, 33, 34, 35 // 前
+};
+
 
 int main() {
 	//GLFWを初期化する
@@ -199,16 +307,29 @@ int main() {
 	//背景色を指定する
 	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 
+	//バックフェースカリングを有効にする
+	glFrontFace(GL_CCW);
+	glCullFace(GL_BACK);
+	glEnable(GL_CULL_FACE);
+
+	//デプスバッファを有効にする
+	glClearDepth(1.0);
+	glDepthFunc(GL_LESS);
+	glEnable(GL_DEPTH_TEST);
+
 
 	//プログラムオブジェクトを作成するcreate
 	const GLuint program(loadProgram("point.vert", "point.frag"));
 
 	//uniform変数の場所を取得する
 	const GLint modelviewLoc(glGetUniformLocation(program, "modelview"));
-	const GLint modelLoc(glGetUniformLocation(program, "model"));
+	const GLint projectionLoc(glGetUniformLocation(program, "projection"));
 
 	//図形データを作成する
-	std::unique_ptr<const Shape> shape(new Shape(2, 4, rectangleVertex));
+	std::unique_ptr<const Shape> shape(new SolidShapeIndex(3,36,solidCubeVertex,36,solidCubeIndex));
+
+	//タイマーを0にセット
+	glfwSetTime(0.0);
 
 
 
@@ -216,35 +337,44 @@ int main() {
 	while (window) {
 
 		//ウィンドウを消去する
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 		//ここで描画処理を行う
 
 		//シェーダープログラムの使用開始
 		glUseProgram(program);
 
-		//拡大縮小の変換行列を求める
+		//透視投影変換行列を求める
 		const GLfloat* const size(window.getSize());
-		const GLfloat scale(window.getScale() * 2.0f);
-		const Matrix scaling(Matrix::scale(scale/size[0], scale / size[1], 1.0f));
-
-		//平行移動の変換行列を求める
-		const GLfloat* const position(window.getLocation());
-		const Matrix translation(Matrix::translate(position[0], position[1], 0.0f));
+		const GLfloat fovy(window.getScale() * 0.01f);
+		const GLfloat aspect(size[0] / size[1]);
+		const Matrix projection(Matrix::perspective(fovy, aspect, 1.0f, 10.0f));
 
 		//モデル変換行列を求める
-		const Matrix model(translation * scaling);
+		const GLfloat* const location(window.getLocation());
+		const Matrix r(Matrix::rotate(static_cast<GLfloat>(glfwGetTime()), 0.0f, 1.0f, 0.0f));
+		const Matrix model(Matrix::translate(location[0], location[1], 0.0f)*r);
 
 		//ビュー変換行列を求める
-		const Matrix view(Matrix::lookat(0.0f, 0.0f, 0.0f, -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f));
+		const Matrix view(Matrix::lookat(3.0f, 4.0f, 5.0f, -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f));
 
 		//モデルビュー変換行列を求める
 		const Matrix modelview(view * model);
 
 		//uniform変数に値を設定する
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projection.data());
 		glUniformMatrix4fv(modelviewLoc, 1, GL_FALSE, modelview.data());
 
 		//図形を描画する
+		shape->draw();
+
+		//2つ目のモデルビュー変換行列を求める
+		const Matrix modelview1(modelview * Matrix::translate(0.0f, 0.0f, 3.0f));
+
+		//uniform変数に値を設定する
+		glUniformMatrix4fv(modelviewLoc, 1, GL_FALSE, modelview1.data());
+
+		//2つ目の図形を描画する
 		shape->draw();
 
 		//カラーバッファを入れ替える
