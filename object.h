@@ -20,7 +20,7 @@ public:
 		GLfloat position[3];
 
 		//F
-		GLfloat color[3];
+		GLfloat normal[3];
 	};
 
 
@@ -49,7 +49,7 @@ public:
 		glVertexAttribPointer(0, size, GL_FLOAT, GL_FALSE, sizeof(Vertex), static_cast<Vertex*>(0)->position);
 		glEnableVertexAttribArray(0);
 
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), static_cast<Vertex*>(0)->color);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), static_cast<Vertex*>(0)->normal);
 		//Attribute•Ï”‚ğ—LŒø‚É‚·‚é
 		glEnableVertexAttribArray(1);
 
